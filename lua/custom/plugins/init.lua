@@ -10,6 +10,10 @@ vim.g.loaded_netrwPlugin = 1
 -- optionally enable 24-bit colour
 vim.opt.termguicolors = true
 
+vim.keymap.set('n', '<Leader>i', function()
+  vim.diagnostic.open_float()
+end, { desc = 'Open Diagnostic Float' })
+
 return {
   {
     'windwp/nvim-ts-autotag',
@@ -112,5 +116,19 @@ return {
   -- stylua: ignore
   keys = {
     {"<leader>t", "", desc = "+test"},
+  },
+  {
+    'Maan2003/lsp_lines.nvim',
+    version = 'dbfd8e96ec2696e1ceedcd23fd70e842256e3dea',
+    dependencies = 'nvim-lspconfig',
+    init = function()
+      -- Disable virtual_text since it's redundant due to lsp_lines.
+      vim.diagnostic.config {
+        virtual_text = false,
+      }
+
+      vim.keymap.set('', '<Leader>l', require('lsp_lines').toggle, { desc = 'Toggle lsp_lines' })
+    end,
+    opts = {},
   },
 }
