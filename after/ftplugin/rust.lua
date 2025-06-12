@@ -18,6 +18,6 @@ vim.keymap.set('n', 'gl', function()
   vim.diagnostic.open_float()
 end, { desc = 'Open Diagnostic Float' })
 
-vim.keymap.set('v', '<leader>k', function()
+vim.keymap.set({ 'n', 'v' }, '<leader>k', function()
   vim.cmd.RustLsp { 'hover', 'range' }
 end, { desc = 'Hover Range' })

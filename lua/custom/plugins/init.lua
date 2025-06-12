@@ -14,14 +14,6 @@ vim.keymap.set('n', '<Leader>i', function()
   vim.diagnostic.open_float()
 end, { desc = 'Open Diagnostic Float' })
 
-vim.keymap.set('n', '<Leader>n', function()
-  vim.diagnostic.jump { count = 1, float = true }
-end, { desc = 'Go to Next Diagnostic' })
-
-vim.keymap.set('n', '<Leader>p', function()
-  vim.diagnostic.jump { count = 1, float = true }
-end, { desc = 'Go to Previous Diagnostic' })
-
 vim.keymap.set({ 'i', 's' }, 'jk', '<Esc>')
 vim.keymap.set({ 'i', 's' }, 'kj', '<Esc>')
 
@@ -240,4 +232,18 @@ return {
       },
     },
   },
+  {
+    -- disabled because I didn't like it
+    'nvim-treesitter/nvim-treesitter-context',
+    enabled = false,
+    config = function()
+      vim.keymap.set('n', '[c', function()
+        require('treesitter-context').go_to_context(vim.v.count1)
+      end, { silent = true })
+    end,
+    opts = {
+      max_lines = 3,
+    },
+  },
+  { 'savq/melange-nvim' },
 }
