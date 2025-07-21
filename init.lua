@@ -175,12 +175,6 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
-
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 --
@@ -410,6 +404,11 @@ require('lazy').setup({
             require('telescope.themes').get_dropdown(),
           },
         },
+        pickers = {
+          colorscheme = {
+            enable_preview = true,
+          },
+        },
       }
 
       -- Enable Telescope extensions if they are installed
@@ -565,9 +564,21 @@ require('lazy').setup({
           -- or a suggestion from your LSP for this to activate.
           map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction', { 'n', 'x' })
 
+          -- https://github.com/nvim-lua/kickstart.nvim/issues/927#issuecomment-2106029647
+          if vim.lsp.get_client_by_id(event.data.client_id).config.name == 'ts_ls' then
+            map('<leader>co', function()
+              vim.lsp.buf.code_action {
+                apply = true,
+                context = { only = { 'source.organizeImports' }, diagnostics = {} },
+              }
+            end, 'Organize Imports')
+          end
+
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+
+          map('gt', vim.lsp.buf.type_definition, '[G]oto [T]ype Definition')
 
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
@@ -699,51 +710,6 @@ require('lazy').setup({
         },
       }
     end,
-  },
-
-  { -- Autoformat
-    'stevearc/conform.nvim',
-    event = { 'BufWritePre' },
-    cmd = { 'ConformInfo' },
-    keys = {
-      {
-        '<leader>f',
-        function()
-          require('conform').format { async = true, lsp_format = 'fallback' }
-        end,
-        mode = '',
-        desc = '[F]ormat buffer',
-      },
-    },
-    opts = {
-      notify_on_error = true,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true, rust = true }
-        local lsp_format_opt
-        if disable_filetypes[vim.bo[bufnr].filetype] then
-          lsp_format_opt = 'never'
-        else
-          lsp_format_opt = 'fallback'
-        end
-        return {
-          timeout_ms = 500,
-          lsp_format = lsp_format_opt,
-        }
-      end,
-      formatters_by_ft = {
-        lua = { 'stylua' },
-        json = { 'fixjson' },
-        ruby = { 'solargraph' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
-      },
-    },
   },
 
   { -- Autocompletion
@@ -902,6 +868,7 @@ require('lazy').setup({
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
+    lazy = false,
     config = function()
       -- Better Around/Inside textobjects
       --
@@ -936,6 +903,19 @@ require('lazy').setup({
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
+    keys = {
+      -- { '<leader>hb', '<cmd>Git blame<CR>', desc = 'git [b]lame' },
+      { '<leader>hb', '<cmd>vertical Git blame %<cr>', desc = 'git [b]lame' },
+      -- { '<leader>hb', '<cmd>vertical Git blame -- %<cr>', desc = 'git [b]lame' },
+      -- {
+      --   '<leader>hh',
+      --   function()
+      --     MiniGit.show_range_history()
+      --   end,
+      --   mode = { 'n', 'x' },
+      --   desc = 'show range [h]istory',
+      -- },
+    },
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
@@ -958,9 +938,9 @@ require('lazy').setup({
         enable = true,
         keymaps = {
           init_selection = 'gnn',
-          node_incremental = 'grn',
+          node_incremental = '<C-k>',
           scope_incremental = 'grc',
-          node_decremental = 'grm',
+          node_decremental = '<C-j>',
         },
       },
     },

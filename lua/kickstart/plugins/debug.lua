@@ -7,9 +7,7 @@
 -- kickstart.nvim and not kitchen-sink.nvim ;)
 
 return {
-  -- NOTE: Yes, you can install new plugins here!
   'mfussenegger/nvim-dap',
-  -- NOTE: And you can specify dependencies as well
   dependencies = {
     -- Creates a beautiful debugger UI
     'rcarriga/nvim-dap-ui',
@@ -23,6 +21,7 @@ return {
 
     -- Add your own debuggers here
     'leoluz/nvim-dap-go',
+    'theHamsta/nvim-dap-virtual-text',
   },
   keys = {
     -- Basic debugging keymaps, feel free to change to your liking!
@@ -55,18 +54,32 @@ return {
       desc = 'Debug: Step Out',
     },
     {
-      '<leader>b',
+      '<leader>db',
       function()
         require('dap').toggle_breakpoint()
       end,
-      desc = 'Debug: Toggle Breakpoint',
+      desc = 'Debug: toggle [b]reakpoint',
     },
     {
-      '<leader>B',
+      '<leader>dB',
       function()
         require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
       end,
-      desc = 'Debug: Set Breakpoint',
+      desc = 'Debug: set [B]reakpoint condition',
+    },
+    {
+      '<leader>dt',
+      function()
+        require('dap').terminate()
+      end,
+      desc = 'Debug: [t]erminate',
+    },
+    {
+      '<leader>?',
+      function()
+        ---@diagnostic disable-next-line: missing-fields
+        require('dapui').eval(nil, { enter = true })
+      end,
     },
     -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
     {
@@ -80,6 +93,7 @@ return {
   config = function()
     local dap = require 'dap'
     local dapui = require 'dapui'
+    require('nvim-dap-virtual-text').setup()
 
     require('mason-nvim-dap').setup {
       -- Makes a best effort to setup the various debuggers with
@@ -100,6 +114,7 @@ return {
 
     -- Dap UI setup
     -- For more information, see |:help nvim-dap-ui|
+    ---@diagnostic disable-next-line: missing-fields
     dapui.setup {
       -- Set icons to characters that are more likely to work in every terminal.
       --    Feel free to remove or use ones that you like more! :)
@@ -179,5 +194,134 @@ return {
         detached = vim.fn.has 'win32' == 0,
       },
     }
+
+    dap.configurations.rust = {
+      {
+        name = 'Turso server – step a query',
+        type = 'codelldb',
+        request = 'launch',
+        program = '${workspaceFolder}/target/debug/turso',
+        args = { '--db-path', 'test.db', '--http-listen-addr', '127.0.0.1:8080' },
+        cwd = '${workspaceFolder}',
+        stopOnEntry = false,
+        sourceLanguages = { 'rust', 'c', 'cpp' },
+        initCommands = {
+          'break set -n sqlite3_prepare_v3',
+          'break set -n sqlite3VdbeExec',
+        },
+      },
+      {
+        name = 'Attach to running process (get PID first)',
+        type = 'codelldb',
+        request = 'attach',
+        pid = '${command:pickProcess}',
+      },
+    }
+
+    require('dap').adapters.codelldb = {
+      type = 'executable',
+      command = 'codelldb',
+    }
+
+    -- from https://github.com/mxsdev/nvim-dap-vscode-js/issues/42#issuecomment-1519065750
+    require('dap').adapters['pwa-node'] = {
+      type = 'server',
+      host = 'localhost',
+      port = '${port}',
+      executable = {
+        command = 'js-debug-adapter',
+        args = { '${port}' },
+      },
+    }
+    for _, language in ipairs { 'typescript', 'javascript' } do
+      require('dap').configurations[language] = {
+        {
+          -- from https://www.reddit.com/r/neovim/comments/y7dvva/typescript_debugging_in_neovim_with_nvimdap/
+          name = 'Launch',
+          type = 'pwa-node',
+          request = 'launch',
+          program = '${file}',
+          rootPath = '${workspaceFolder}',
+          cwd = '${workspaceFolder}',
+          sourceMaps = true,
+          skipFiles = { '<node_internals>/**' },
+          protocol = 'inspector',
+          console = 'integratedTerminal',
+        },
+        {
+          name = 'Debug current Ava test',
+          type = 'pwa-node',
+          request = 'launch',
+          runtimeExecutable = 'node',
+          runtimeArgs = {
+            '${workspaceFolder}/node_modules/ava/entrypoints/cli.mjs',
+            '--serial', -- run one test file at a time (much nicer for break-points)
+            '${file}',
+          },
+          cwd = '${workspaceFolder}',
+          rootPath = '${workspaceFolder}',
+          sourceMaps = true,
+          protocol = 'inspector',
+          console = 'integratedTerminal',
+          outputCapture = 'std',
+          skipFiles = { '<node_internals>/**' },
+        },
+        {
+          name = 'Launch with Ava runner',
+          type = 'pwa-node',
+          request = 'launch',
+          program = 'npx',
+          args = '${file}',
+          rootPath = '${workspaceFolder}',
+          cwd = '${workspaceFolder}',
+          sourceMaps = true,
+          skipFiles = { '<node_internals>/**' },
+          protocol = 'inspector',
+          console = 'integratedTerminal',
+        },
+        -- this is a WIP
+        -- see https://codeberg.org/mfussenegger/nvim-dap/wiki/C-C---Rust-(via--codelldb)
+        {
+          type = 'codelldb',
+          request = 'launch',
+          name = 'Debug Ava Test (debug Rust side)',
+          args = { '${file}' },
+          sourceLanguages = { 'rust' },
+          cwd = '${workspaceFolder}',
+          runtimeExecutable = 'node',
+          program = 'node',
+          runtimeArgs = {
+            '${workspaceFolder}/node_modules/ava/entrypoints/cli.mjs',
+            '--serial', -- run one test file at a time (much nicer for break-points)
+            '${file}',
+          },
+          preLaunchTask = 'yarn build:debug',
+        },
+        {
+          name = 'Debug Ava Test (debug Rust side 2)',
+          type = 'codelldb',
+          request = 'launch',
+          program = 'node',
+          args = {
+            vim.fn.expand '${workspaceFolder}/node_modules/ava/entrypoints/cli.mjs',
+            '--serial',
+            vim.fn.expand '${file}',
+          },
+          cwd = vim.fn.expand '${workspaceFolder}',
+          sourceLanguages = { 'rust' },
+          preLaunchTask = function()
+            -- run your task; adjust to match your setup
+            os.execute('cd ' .. vim.fn.expand '${workspaceFolder}' .. ' && yarn build:debug')
+          end,
+        },
+        {
+          type = 'pwa-node',
+          request = 'attach',
+          name = 'Attach to node',
+          processId = require('dap.utils').pick_process,
+          cwd = '${workspaceFolder}',
+        },
+      }
+    end
   end,
 }

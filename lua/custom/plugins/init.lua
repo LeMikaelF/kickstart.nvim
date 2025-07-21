@@ -1,14 +1,11 @@
--- You can add your own plugins here or in other files in this directory!
---  I promise not to create any merge conflicts in this directory :)
---
--- See the kickstart.nvim README for more information
-
 -- disable netrw at the very start of your init.lua
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
 -- optionally enable 24-bit colour
 vim.opt.termguicolors = true
+
+vim.opt.winborder = 'double'
 
 vim.keymap.set('n', '<Leader>i', function()
   vim.diagnostic.open_float()
@@ -26,6 +23,13 @@ vim.keymap.set('n', 'a', function()
     vim.api.nvim_feedkeys('a', 'n', false)
   end
 end, { noremap = true, silent = true })
+
+vim.keymap.set({ 'n', 'x' }, '<leader>hh', function()
+  require('mini.git').show_range_history()
+end, { desc = 'show range [h]istory' })
+
+vim.keymap.set({ 'n' }, 'C-S-I', ':bnext<CR>', { desc = 'next buffer' })
+vim.keymap.set({ 'n' }, 'C-S-O', ':bprev<CR>', { desc = 'previous buffer' })
 
 return {
   {
@@ -46,10 +50,11 @@ return {
     version = '*',
     lazy = false,
   },
-  {
-    name = 'neotest-minitest',
-    dir = '/Users/mikael.francoeur/programming/nvim/neotest-minitest',
-  },
+  -- {
+  --   name = 'neotest-minitest',
+  --   enabled = 'false', -- doesn't work,
+  --   dir = '/Users/mikael.francoeur/programming/nvim/neotest-minitest',
+  -- },
   {
     'nvim-neotest/neotest',
     version = '5.6.1',
@@ -62,7 +67,8 @@ return {
       'nvim-neotest/neotest-jest',
       'olimorris/neotest-rspec',
       -- 'zidhuss/neotest-minitest',
-      'neotest-minitest',
+      -- TODO restore this when neotest-minitest is fixed
+      -- 'neotest-minitest',
       'mrcjkb/rustaceanvim',
     },
     lazy = false,
@@ -81,8 +87,14 @@ return {
             end,
           },
           require 'neotest-rspec',
-          require 'neotest-minitest',
+          -- require 'neotest-minitest',
           require 'rustaceanvim.neotest',
+          require 'neotest-ava',
+        },
+
+        output_panel = {
+          enabled = true,
+          open = 'botright vsplit | vertical resize 80',
         },
       }
 
@@ -128,10 +140,10 @@ return {
         { desc = 'Run Watch File' }
       )
     end,
-  },
-  -- stylua: ignore
-  keys = {
-    {"<leader>t", "", desc = "+test"},
+    -- stylua: ignore
+    -- keys = {
+    --   {"<leader>t", "", desc = "+test"},
+    -- },
   },
   {
     name = 'lsp_lines',
@@ -147,11 +159,6 @@ return {
       vim.keymap.set('', '<Leader>l', require('lsp_lines').toggle, { desc = 'Toggle lsp_lines' })
     end,
     opts = {},
-  },
-  {
-    'mrcjkb/rustaceanvim',
-    version = '^6',
-    lazy = false,
   },
   {
     'morhetz/gruvbox',
@@ -246,4 +253,60 @@ return {
     },
   },
   { 'savq/melange-nvim' },
+  {
+    'mrcjkb/rustaceanvim',
+    version = '^6',
+    lazy = false,
+    init = function()
+      vim.g.rustaceanvim = {
+        server = {
+          default_settings = {
+            ['rust-analyzer'] = {
+              procMacro = {
+                ignored = {
+                  ['napi-derive'] = { 'napi' },
+                },
+              },
+              diagnostics = {
+                disabled = { 'proc-macro-disabled' },
+              },
+            },
+          },
+        },
+      }
+    end,
+  },
+  {
+    'NeogitOrg/neogit',
+    lazy = false,
+    dependencies = {
+      'nvim-lua/plenary.nvim', -- required
+      'sindrets/diffview.nvim', -- optional - Diff integration
+
+      -- Only one of these is needed.
+      'nvim-telescope/telescope.nvim', -- optional
+      -- 'ibhagwan/fzf-lua', -- optional
+      -- 'echasnovski/mini.pick', -- optional
+      -- 'folke/snacks.nvim', -- optional
+    },
+    keys = {
+      {
+        '<leader>hn',
+        '<cmd>Neogit kind=vsplit<cr>',
+        desc = 'open [n]eogit in right split',
+      },
+      {
+        '<leader>hm',
+        '<cmd>Neogit<cr>',
+        desc = 'open [n]eogit',
+      },
+    },
+  },
+  {
+    'mxsdev/nvim-dap-vscode-js',
+    ft = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
+  },
+  {
+    'theHamsta/nvim-dap-virtual-text',
+  },
 }
