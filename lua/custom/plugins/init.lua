@@ -309,4 +309,65 @@ return {
   {
     'theHamsta/nvim-dap-virtual-text',
   },
+  {
+    'chrisgrieser/nvim-rulebook',
+    opts = {
+      ignoreComments = {
+        rustc = {
+          comment = '#[allow(%s)]',
+          location = 'prevLine',
+          multiRuleIgnore = true,
+          multiRuleSeparator = ', ',
+          docs = 'https://doc.rust-lang.org/reference/attributes/diagnostics.html#r-attributes.diagnostics.expect',
+        },
+      },
+    },
+    keys = {
+      {
+        '<leader>ri',
+        function()
+          require('rulebook').ignoreRule()
+        end,
+        desc = '[r]ulebook: [i]gnore rule',
+      },
+      {
+        '<leader>rl',
+        function()
+          require('rulebook').lookupRule()
+        end,
+        desc = '[r]ulebook: [l]ookup rule',
+      },
+      {
+        '<leader>ry',
+        function()
+          require('rulebook').yankDiagnosticCode()
+        end,
+        desc = '[r]ulebook: [y]ank diagnostic code',
+      },
+      {
+        '<leader>rf',
+        function()
+          require('rulebook').suppressFormatter()
+        end,
+        desc = '[r]ulebook: suppress [f]ormatter',
+      },
+    },
+  },
+  {
+    'allaman/emoji.nvim',
+    version = '1.0.0',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-telescope/telescope.nvim',
+    },
+    keys = {
+      {
+        '<leader>se',
+        function()
+          require('telescope').load_extension('emoji').emoji()
+        end,
+        desc = '[S]earch [E]moji',
+      },
+    },
+  },
 }
