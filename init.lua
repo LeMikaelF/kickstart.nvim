@@ -379,6 +379,7 @@ require('lazy').setup({
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
+      local custom_pickers = require 'telescope_custom_pickers'
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
@@ -390,6 +391,7 @@ require('lazy').setup({
               ['<M-Down>'] = require('telescope.actions').cycle_history_next,
               ['<M-Up>'] = require('telescope.actions').cycle_history_prev,
               ['<c-d>'] = require('telescope.actions').delete_buffer,
+              ['<C-]>'] = require('telescope.actions.layout').cycle_layout_next,
             },
           },
           -- layout_strategy = 'vertical',
@@ -397,8 +399,10 @@ require('lazy').setup({
             width = 0.9,
             height = 0.9,
           },
+          cache_picker = {
+            num_pickers = 10,
+          },
         },
-        -- pickers = {}
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -407,6 +411,14 @@ require('lazy').setup({
         pickers = {
           colorscheme = {
             enable_preview = true,
+          },
+          live_grep = {
+            mappings = {
+              i = {
+                ['<c-f>'] = custom_pickers.actions.set_extension,
+                ['<c-l>'] = custom_pickers.actions.set_folders,
+              },
+            },
           },
         },
       }
@@ -417,16 +429,18 @@ require('lazy').setup({
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
+      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader>sm', builtin.marks, { desc = '[S]earch Marks' })
+      vim.keymap.set('n', '<leader>sp', builtin.pickers, { desc = '[S]earch Recent [Pickers]' })
+      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
+      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+      vim.keymap.set('n', '<leader>st', builtin.tags, { desc = '[S]earch Tags' })
+      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
@@ -649,7 +663,13 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         bashls = {},
-        clangd = {},
+        clangd = {
+
+          -- this was an experiment I vibe-coded to get cppman docs in the hover window
+          -- on_attach = function(client, bufnr)
+          --   require('cpp_hover').attach(client, bufnr)
+          -- end,
+        },
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
@@ -706,7 +726,7 @@ require('lazy').setup({
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
             require('lspconfig')[server_name].setup(server)
           end,
-          rust_analyzer = function() end,
+          -- rust_analyzer = function() end,
         },
       }
     end,
@@ -905,7 +925,7 @@ require('lazy').setup({
     end,
     keys = {
       -- { '<leader>hb', '<cmd>Git blame<CR>', desc = 'git [b]lame' },
-      { '<leader>hb', '<cmd>vertical Git blame %<cr>', desc = 'git [b]lame' },
+      { '<leader>hb', '<cmd>Gitsigns blame %<cr>', desc = 'git [b]lame' },
       -- { '<leader>hb', '<cmd>vertical Git blame -- %<cr>', desc = 'git [b]lame' },
       -- {
       --   '<leader>hh',

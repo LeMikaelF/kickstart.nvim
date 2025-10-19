@@ -214,6 +214,7 @@ return {
         name = 'Attach to running process (get PID first)',
         type = 'codelldb',
         request = 'attach',
+        sourceLanguages = { 'rust', 'c', 'cpp' },
         pid = '${command:pickProcess}',
       },
     }

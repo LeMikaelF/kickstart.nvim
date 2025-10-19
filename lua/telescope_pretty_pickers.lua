@@ -87,41 +87,41 @@ function M.pretty_grep_picker(picker_and_options)
     --          be deferred to allow lazy loading.
     --
     -- HELP: Read the 'make_entry.lua' file for more info on how all of this works
-    -- original_entry_table.display = function(entry)
-    --   ---- Get File columns data ----
-    --   -------------------------------
-    --
-    --   local tail, path_to_display = M.get_path_and_tail(entry.filename)
-    --
-    --   ---- Format Text for display ----
-    --   ---------------------------------
-    --
-    --   -- Add coordinates if required by 'options'
-    --   local coordinates = ''
-    --
-    --   if not options.disable_coordinates then
-    --     if entry.lnum then
-    --       if entry.col then
-    --         coordinates = string.format('%s:%s', entry.lnum, entry.col)
-    --       else
-    --         coordinates = string.format('%s', entry.lnum)
-    --       end
-    --     end
-    --   end
-    --
-    --   -- Encode text if necessary
-    --   local text = options.file_encoding and vim.iconv(entry.text, options.file_encoding, 'utf8') or entry.text
-    --
-    --   -- INSIGHT: This return value should be a tuple of 2, where the first value is the actual value
-    --   --          and the second one is the highlight information, this will be done by the displayer
-    --   --          internally and return in the correct format.
-    --   return displayer {
-    --     tail,
-    --     { coordinates, 'TelescopeResultsComment' },
-    --     { path_to_display, 'TelescopeResultsComment' },
-    --     text,
-    --   }
-    -- end
+    original_entry_table.display = function(entry)
+      ---- Get File columns data ----
+      -------------------------------
+
+      local tail, path_to_display = M.get_path_and_tail(entry.filename)
+
+      ---- Format Text for display ----
+      ---------------------------------
+
+      -- Add coordinates if required by 'options'
+      local coordinates = ''
+
+      if not options.disable_coordinates then
+        if entry.lnum then
+          if entry.col then
+            coordinates = string.format('%s:%s', entry.lnum, entry.col)
+          else
+            coordinates = string.format('%s', entry.lnum)
+          end
+        end
+      end
+
+      -- Encode text if necessary
+      local text = options.file_encoding and vim.iconv(entry.text, options.file_encoding, 'utf8') or entry.text
+
+      -- INSIGHT: This return value should be a tuple of 2, where the first value is the actual value
+      --          and the second one is the highlight information, this will be done by the displayer
+      --          internally and return in the correct format.
+      return displayer {
+        tail,
+        { coordinates, 'TelescopeResultsComment' },
+        { path_to_display, 'TelescopeResultsComment' },
+        text,
+      }
+    end
 
     return original_entry_table
   end

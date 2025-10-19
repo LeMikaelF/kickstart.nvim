@@ -31,6 +31,20 @@ end, { desc = 'show range [h]istory' })
 vim.keymap.set({ 'n' }, 'C-S-I', ':bnext<CR>', { desc = 'next buffer' })
 vim.keymap.set({ 'n' }, 'C-S-O', ':bprev<CR>', { desc = 'previous buffer' })
 
+local function closeAllFloatingWindows()
+  vim.keymap.set('n', '<esc>', function()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_get_config(win).relative == 'win' then
+        vim.api.nvim_win_close(win, false)
+      end
+    end
+  end)
+end
+
+vim.keymap.set({ 'n' }, '<esc>', closeAllFloatingWindows, { desc = 'close all floating windows' })
+
+vim.keymap.set({ 'n' }, '<leader>tn', ':Neotree toggle<CR>', { desc = 'toggle Neotree' })
+
 return {
   {
     'windwp/nvim-ts-autotag',
@@ -268,7 +282,20 @@ return {
                 },
               },
               diagnostics = {
-                disabled = { 'proc-macro-disabled' },
+                disabled = { 'proc-macro-disabled', 'unlinked-file' },
+                experimental = {
+                  enable = true,
+                },
+              },
+              check = {
+                command = 'clippy',
+                workspace = false,
+                -- had to set this to true so that it will pick up tests
+                allTargets = true,
+              },
+              cargo = {
+                allTargets = false,
+                targetDir = true,
               },
             },
           },
@@ -279,6 +306,12 @@ return {
   {
     'NeogitOrg/neogit',
     lazy = false,
+    opts = {
+      integrations = {
+        diffview = true,
+        telescope = true,
+      },
+    },
     dependencies = {
       'nvim-lua/plenary.nvim', -- required
       'sindrets/diffview.nvim', -- optional - Diff integration
@@ -369,5 +402,40 @@ return {
         desc = '[S]earch [E]moji',
       },
     },
+  },
+  {
+    'madskjeldgaard/cppman.nvim',
+    commit = '801c5b178ee1246bc8ee044984d5758933b2baca',
+    dependencies = {
+      'MunifTanjim/nui.nvim',
+    },
+    lazy = false,
+    cmd = 'CPPMan',
+    config = function()
+      local cppman = require 'cppman'
+      cppman.setup()
+
+      vim.keymap.set('n', '<leader>cm', function()
+        cppman.open_cppman_for(vim.fn.expand '<cword>')
+      end)
+
+      vim.keymap.set('n', '<leader>cc', function()
+        cppman.input()
+      end)
+    end,
+    keys = {
+      {
+        '<leader>K',
+        function()
+          require('cppman').open_cppman_for(vim.fn.expand '<cword>')
+        end,
+        ft = { 'c', 'cpp' },
+      },
+    },
+  },
+  {
+    'chentoast/marks.nvim',
+    event = 'VeryLazy',
+    opts = {},
   },
 }
